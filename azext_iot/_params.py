@@ -822,6 +822,7 @@ def load_arguments(self, _):
         context.argument(
             "custom_metric_queries",
             options_list=["--custom-metric-queries"],
+            nargs="*",
             help="Inline custom metric queries JSON or file path to custom metric queries JSON. "
         )
 
@@ -883,6 +884,11 @@ def load_arguments(self, _):
             "auth_type_dataplane",
             options_list=["--auth-type"],
             arg_type=hub_auth_type_dataplane_param_type,
+        )
+        context.argument(
+            "custom_metric_queries",
+            options_list=["--custom-metric-queries"],
+            help="IoT Edge deployment metric definitions new key value pairs style. Provide file path or raw json.",
         )
 
     with self.argument_context("iot dps") as context:

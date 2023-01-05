@@ -13,7 +13,7 @@ from uuid import uuid4
 from random import randint
 from knack.cli import CLIError
 from azext_iot.operations import hub as subject
-from azext_iot.common.utility import read_file_content, evaluate_literal
+from azext_iot.common.utility import process_json_arg, read_file_content, evaluate_literal, validate_key_value_pairs
 from azext_iot.tests.conftest import (
     build_mock_response,
     path_service_client,
@@ -952,11 +952,11 @@ class TestConfigTestQueries:
     @pytest.mark.parametrize(
         "target_condition, custom_metric_queries", [
             ("tags.building=43 and tags.environment='test'",
-                {"mertic1": "SELECT moduleId from devices.modules where tags.location=''US''"}),
+                ["mertic1=SELECT moduleId from devices.modules where tags.location=''US''"]),
             ("tags.building=43 and tags.environment='test'",
-                {"mertic1": "SELECT *", "metric2": "SELECT deviceId from devices where tags.location = 200"}),
+                ["mertic1=SELECT *", "metric2=SELECT deviceId from devices where tags.location = 200"]),
             ("tags.building=43 and tags.environment='test'",
-                {"mertic1": "SELECT *", "metric2": "file.json"}),
+                ["azext_iot\\tests\\iothub\\configurations\\test_config_custom_queries.json"]),
         ]
     )
     def test_config_valid_queries(self, fixture_cmd, valid_queries, target_condition, custom_metric_queries):
@@ -964,7 +964,7 @@ class TestConfigTestQueries:
             cmd=fixture_cmd,
             hub_name=mock_target["entity"],
             target_condition=target_condition,
-            custom_metric_queries=str(custom_metric_queries)
+            custom_metric_queries=custom_metric_queries
         )
         request = valid_queries.calls[0].request
         body = request.body
@@ -975,13 +975,18 @@ class TestConfigTestQueries:
         assert method == "POST"
 
         assert json.loads(body)["targetCondition"] == target_condition
+        if str(custom_metric_queries).find('.json') != -1:
+            file_path = custom_metric_queries[0]
+            custom_metric_queries = process_json_arg(file_path, argument_name="file_path")
+        else:
+            custom_metric_queries = validate_key_value_pairs(';'.join(custom_metric_queries))
         assert json.loads(body)["customMetricQueries"] == custom_metric_queries
-        assert result == "Validation passed!"
+        assert result == generate_validation_payload(True)
 
     @pytest.mark.parametrize(
         "target_condition, custom_metric_queries", [
-            ("tags.building=43 and tags.environment='test'", {"hi": "sd"}),
-            ("target_condition", {"hi": "sd"})
+            ("tags.building=43 and tags.environment='test'", ["hi=sd"]),
+            ("target_condition", ["hi=sd"])
         ]
     )
     def test_config_invalid_queries(self, fixture_cmd, invalid_queries, target_condition, custom_metric_queries):
@@ -989,7 +994,7 @@ class TestConfigTestQueries:
             cmd=fixture_cmd,
             hub_name=mock_target["entity"],
             target_condition=target_condition,
-            custom_metric_queries=str(custom_metric_queries),
+            custom_metric_queries=custom_metric_queries,
         )
         request = invalid_queries.calls[0].request
         body = request.body
@@ -1000,8 +1005,13 @@ class TestConfigTestQueries:
         assert method == "POST"
 
         assert json.loads(body)["targetCondition"] == target_condition
+        if str(custom_metric_queries).find('.json') != -1:
+            file_path = custom_metric_queries[0]
+            custom_metric_queries = process_json_arg(file_path, argument_name="file_path")
+        else:
+            custom_metric_queries = validate_key_value_pairs(';'.join(custom_metric_queries))
         assert json.loads(body)["customMetricQueries"] == custom_metric_queries
-        assert result != "Validation passed!"
+        assert result == generate_validation_payload(False)
 
     def test_config_queries_invalid_file(
         self, fixture_cmd
@@ -1023,4 +1033,13 @@ class TestConfigTestQueries:
                 hub_name=mock_target["entity"],
                 target_condition="targetCondition",
                 custom_metric_queries=str({"json"}),
+            )
+
+    def test_config_queries_no_args(
+        self, fixture_cmd
+    ):
+        with pytest.raises(CLIError):
+            subject.iot_hub_configuration_test_queries(
+                cmd=fixture_cmd,
+                hub_name=mock_target["entity"]
             )

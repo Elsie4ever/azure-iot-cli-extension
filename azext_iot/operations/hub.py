@@ -44,6 +44,7 @@ from azext_iot.common.utility import (
     process_json_arg,
     generate_key,
     generate_storage_account_sas_token,
+    validate_key_value_pairs
 )
 from azext_iot._factory import SdkResolver, CloudError
 from azext_iot.operations.generic import _execute_query, _process_top
@@ -1627,6 +1628,9 @@ def iot_hub_configuration_test_queries(
     login=None,
     auth_type_dataplane=None
 ):
+    if not target_condition and not custom_metric_queries:
+        raise CLIInternalError('Please enter at lease one argument to continue.')
+
     discovery = IotHubDiscovery(cmd)
     target = discovery.get_target(
         resource_name=hub_name,
@@ -1639,19 +1643,13 @@ def iot_hub_configuration_test_queries(
 
     try:
         if custom_metric_queries:
-            custom_metric_queries = process_json_arg(custom_metric_queries, argument_name="custom_metric_queries")
+            if str(custom_metric_queries).find('.json') != -1:
+                file_path = custom_metric_queries[0]
+                custom_metric_queries = process_json_arg(file_path, argument_name="file_path")
+            else:
+                custom_metric_queries = validate_key_value_pairs(';'.join(custom_metric_queries))
 
-        result = service_sdk.configuration.test_queries(target_condition, custom_metric_queries, raw=True).response.json()
-        validation_errors = []
-
-        if not result['targetConditionError'] and not result['customMetricQueryErrors']:
-            return 'Validation passed!'
-        if result['targetConditionError']:
-            validation_errors.append('Target condition validation failed: {}.'.format(result['targetConditionError']))
-        if result['customMetricQueryErrors']:
-            validation_errors.append('Custom metric query validation failed: {}.'.format(result['customMetricQueryErrors']))
-
-        return validation_errors
+        return service_sdk.configuration.test_queries(target_condition, custom_metric_queries, raw=True).response.json()
     except CloudError as e:
         handle_service_exception(e)
 
