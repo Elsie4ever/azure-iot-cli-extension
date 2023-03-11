@@ -13,7 +13,7 @@ from azext_iot.common.embedded_cli import EmbeddedCLI
 from azext_iot.common.utility import ensure_azure_namespace_path
 from azext_iot.common.utility import read_file_content
 from azext_iot.tests.settings import DynamoSettings
-from typing import TypeVar
+from typing import TypeVar, Optional, List
 
 ensure_azure_namespace_path()
 
@@ -166,7 +166,7 @@ def get_role_assignments(
     scope: str,
     assignee: str = None,
     role: str = None,
-) -> json:
+) -> List[dict]:
     """
     Get rbac permissions of resource.
     """
@@ -189,8 +189,8 @@ def assign_role_assignment(
     scope: str,
     assignee: str,
     max_tries=10,
-    wait=10
-):
+    wait=10,
+) -> Optional[dict]:
     """
     Assign rbac permissions to resource.
     """
@@ -198,17 +198,22 @@ def assign_role_assignment(
     tries = 0
     while tries < max_tries:
         role_assignments = get_role_assignments(scope=scope, role=role)
-        role_assignment_principal_ids = [assignment["principalId"] for assignment in role_assignments]
-        if assignee in role_assignment_principal_ids:
-            break
+        logger.info(f"Role assignments for the role of '{role}' against scope '{scope}': {role_assignments}")
+        role_assignment_principal_ids = [assignment.get("principalId") for assignment in role_assignments]
+        role_assignment_principal_names = [assignment.get("principalName") for assignment in role_assignments]
+        if assignee in role_assignment_principal_ids or assignee in role_assignment_principal_names:
+            return output
         # else assign role to scope and check again
-        output = cli.invoke(
+        assign_op = cli.invoke(
             f'role assignment create --assignee "{assignee}" --role "{role}" --scope "{scope}"'
         )
+        output = assign_op.as_json()
+        if not assign_op.success():
+            logger.warning(f"Failed to assign '{assignee}' the role of '{role}' against scope '{scope}'.")
+            return output
+
         sleep(wait)
         tries += 1
-    if not output.success():
-        logger.warning(f"Failed to assign '{assignee}' the role of '{role}' against scope '{scope}'.")
 
     return output
 

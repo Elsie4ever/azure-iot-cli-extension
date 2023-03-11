@@ -262,10 +262,8 @@ class TestDTResourceLifecycle(DTLiveScenarioTest):
             scope=rbac_instance["id"],
             assignee=rbac_assignee_owner)
 
-        assert assign_output and assign_output.success()
-
         assert_common_rbac_attributes(
-            assign_output.as_json(),
+            assign_output,
             rbac_instance_name,
             "owner",
             rbac_assignee_owner,
@@ -276,10 +274,8 @@ class TestDTResourceLifecycle(DTLiveScenarioTest):
             scope=rbac_instance["id"],
             assignee=rbac_assignee_reader)
 
-        assert assign_output and assign_output.success()
-
         assert_common_rbac_attributes(
-            assign_output.as_json(),
+            assign_output,
             rbac_instance_name,
             "reader",
             rbac_assignee_reader,
