@@ -1,9 +1,11 @@
 parameters:
 - name: rootCommand
   type: string
+- name: languageOption
+  type: string
 
 steps:
-  - script: 'python ./scripts/dump_help.py ${{ parameters.rootCommand }}'
+  - script: 'python ./scripts/dump_help.py --commands ${{ parameters.rootCommand }} --language ${{ parameters.languageOption }}'
     displayName: 'Generate help doc'
 
   - task: PublishBuildArtifacts@1

@@ -9,6 +9,9 @@ parameters:
 - name: rootCommand
   type: string
   default: 'iot'
+- name: languageOption
+  type: string
+  default: 'English'
 - name: linuxImage
   type: string
   default: 'ubuntu-20.04'
@@ -42,3 +45,4 @@ jobs:
     - template: templates/generate-publish-help-documentation.yml
       parameters:
         rootCommand: ${{ parameters.rootCommand }}
+        languageOption: ${{ parameters.languageOption }}

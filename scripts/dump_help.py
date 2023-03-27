@@ -26,8 +26,10 @@ parser = argparse.ArgumentParser(
     epilog=example_text,
     formatter_class=argparse.RawDescriptionHelpFormatter
 )
-parser.add_argument('commands', type=str, nargs='+',
+parser.add_argument('--commands', type=str, nargs='+',
                     help='Command you want help to be printed out for.')
+parser.add_argument('--language', type=str, nargs='?',
+                    help='Print out help content in specific language, it will default to English')
 args = parser.parse_args()
 
 
@@ -62,10 +64,11 @@ if __name__ == "__main__":
     output_file = StringIO()
     cli = get_default_cli(invocation_cls=AzCliCommandInvoker)
     arguments = args.commands
+    language = args.language or "english"
 
     try:
         with redirect_stdout(output_file):
-            cli.invoke(arguments, out_file=None)
+            cli.invoke(args=arguments, initial_invocation_data={"language":language}, out_file=None)
     except BaseException:
         file_name = "help.md"
         help_contents = output_file.getvalue()
@@ -96,11 +99,11 @@ if __name__ == "__main__":
             help_contents = help_contents[:line + 2] + help_contents[line + 3:]
 
         # Remove deprecated
-        deprecated_lines = [i for i in range(len(help_contents)) if "deprecated" in help_contents[i].lower()]
-        while deprecated_lines:
-            end = deprecated_lines.pop() + 1
-            start = deprecated_lines.pop()
-            help_contents = help_contents[:start] + help_contents[end:]
+        # deprecated_lines = [i for i in range(len(help_contents)) if "deprecated" in help_contents[i].lower()]
+        # while deprecated_lines:
+        #     end = deprecated_lines.pop() + 1
+        #     start = deprecated_lines.pop()
+        #     help_contents = help_contents[:start] + help_contents[end:]
 
         # Add disclaimer
         command = ' '.join(arguments)
@@ -116,6 +119,6 @@ if __name__ == "__main__":
         help_contents = "\n".join(help_contents)
         print(f"Writing to {file_name}")
 
-        with open(file_name, "w") as f:
+        with open(file_name, "w", encoding="utf-8") as f:
             f.write(help_contents)
 

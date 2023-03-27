@@ -5,6 +5,7 @@
 
 from knack.invocation import CommandInvoker
 from azure.cli.core.commands import _pre_command_table_create
+from az_openai_generator import generate_openai_explain
 
 
 class AzCliCommandInvoker(CommandInvoker):
@@ -20,6 +21,7 @@ class AzCliCommandInvoker(CommandInvoker):
         # store the commands and sub commands to be printed out
         # tuple structure: (command_name, number of sub_headers for md file)
         command_list = [(command, 1)]
+        language = self.data['language']
 
         try:
             # The command is a non group command
@@ -57,17 +59,22 @@ class AzCliCommandInvoker(CommandInvoker):
         for sub_command, header in command_list:
             print("#" * header + " " + sub_command)
             print("```")
-            # Ensure that there is a help in the args
-            args = sub_command.split() + ["-h"]
-            # The usual prep the command loader and parser
-            self.commands_loader.command_name = sub_command
-            self.parser.cli_ctx = self.cli_ctx
-            self.parser.load_command_table(self.commands_loader)
-            try:
-                # This will print out the help messages
-                self.parser.parse_args(args)
-            except BaseException:
-                # Don't want to end before getting through everything
+            # import pdb;pdb.set_trace()
+            if language == "english":
+                # Ensure that there is a help in the args
+                args = sub_command.split() + ["-h"]
+                # The usual prep the command loader and parser
+                self.commands_loader.command_name = sub_command
+                self.parser.cli_ctx = self.cli_ctx
+                self.parser.load_command_table(self.commands_loader)
+                try:
+                    # This will print out the help messages
+                    self.parser.parse_args(args)
+                except BaseException:
+                    # Don't want to end before getting through everything
+                    print("```\n")
+            else:
+                generate_openai_explain(cmd=sub_command, language=language)
                 print("```\n")
         # End program (the help usually sends an exit of 0)
         exit(0)
