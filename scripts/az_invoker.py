@@ -75,6 +75,7 @@ class AzCliCommandInvoker(CommandInvoker):
                     print("```\n")
             else:
                 generate_openai_explain(cmd=sub_command, language=language)
+                # import pdb;pdb.set_trace()
                 print("```\n")
         # End program (the help usually sends an exit of 0)
         exit(0)

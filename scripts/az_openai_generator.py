@@ -1,4 +1,5 @@
 import os
+from time import sleep
 import openai
 
 # This is set to `azure`
@@ -38,7 +39,7 @@ def generate_openai_explain(cmd, language):
             frequency_penalty=0,
             presence_penalty=0,
             stop=None)
-        text = response['choices'][0]["message"]["content"]
-        print(text)
+        print("print something!")
+        print(response['choices'][0]["message"]["content"])
     except Exception as err:
         print("Encountered exception. {}".format(err))

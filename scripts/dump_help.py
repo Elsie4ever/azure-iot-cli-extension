@@ -67,7 +67,7 @@ if __name__ == "__main__":
     language = args.language or "english"
 
     try:
-        with redirect_stdout(output_file):
+        # with redirect_stdout(output_file):
             cli.invoke(args=arguments, initial_invocation_data={"language":language}, out_file=None)
     except BaseException:
         file_name = "help.md"
