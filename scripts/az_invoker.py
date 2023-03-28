@@ -60,7 +60,7 @@ class AzCliCommandInvoker(CommandInvoker):
             print("#" * header + " " + sub_command)
             print("```")
             # import pdb;pdb.set_trace()
-            if language == "english":
+            if language.lower() == "english":
                 # Ensure that there is a help in the args
                 args = sub_command.split() + ["-h"]
                 # The usual prep the command loader and parser
