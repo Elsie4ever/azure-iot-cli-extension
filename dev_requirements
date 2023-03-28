@@ -12,4 +12,4 @@ flake8
 pytest-xdist
 pytest-rerunfailures
 tox
-openai
+openai==0.26.5
