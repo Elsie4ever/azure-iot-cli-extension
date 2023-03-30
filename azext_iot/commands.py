@@ -11,6 +11,7 @@ Load CLI commands
 from azext_iot import (
     iothub_ops,
     iotdps_ops,
+    iotcopilot_ops
 )
 
 
@@ -225,3 +226,8 @@ def load_command_table(self, _):
         command_type=iotdps_ops,
     ) as cmd_group:
         cmd_group.show_command("show", "iot_dps_connection_string_show")
+
+    with self.command_group(
+        "iot copilot", command_type=iotcopilot_ops
+    ) as cmd_group:
+        cmd_group.show_command("ask", "iot_copilot_ask")

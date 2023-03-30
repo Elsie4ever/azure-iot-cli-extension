@@ -1007,6 +1007,12 @@ def load_arguments(self, _):
             arg_type=dps_auth_type_dataplane_param_type,
         )
 
+    with self.argument_context("iot copilot ask") as context:
+        context.argument(
+            "prompt",
+            help="This prompt is used for the copilot to ask the user for scenarios to generate Azure CLI commands."
+        )
+
     with self.argument_context("iot dps compute-device-key") as context:
         context.argument(
             "enrollment_id",

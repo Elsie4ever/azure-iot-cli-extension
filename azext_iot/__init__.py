@@ -13,6 +13,7 @@ from azext_iot.product.command_map import load_product_commands
 
 iothub_ops = CliCommandType(operations_tmpl="azext_iot.operations.hub#{}")
 iotdps_ops = CliCommandType(operations_tmpl="azext_iot.operations.dps#{}")
+iotcopilot_ops = CliCommandType(operations_tmpl="azext_iot.operations.copilot#{}")
 
 
 class IoTExtCommandsLoader(AzCommandsLoader):
